@@ -1,0 +1,31 @@
+---
+- name: Play01 - DB 서비스 기동
+  hosts: database_dev
+  vars:
+    packages:
+      - mariadb
+      - mariadb-server
+      - python3-PyMySQL
+    service: mariadb
+  tasks:
+  ###################################################################
+  # 1) 패키지 설치 - mariadb, mariadb-server, python3-PyMySQL
+  # 2) 서비스 기동 - mariadb.service
+  ###################################################################
+  - name: 1) 패키지 설치
+    ansible.builtin.yum:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ packages }}"
+    when: ansible_distribution == 'RedHat'
+    # ans all -m setup -a 'filter=ansible_distribution'
+    # yum이라는 모듈 자체가 redhat계열에서만 사용함
+    # 따라서, when절을 사용하여 redhat계열에서만 실행되도록 조건을 걸어준다.
+
+  - name: 2) 서비스 기동
+    ansible.builtin.systemd:
+      name: "{{ service }}"
+      state: started
+      enabled: true
+
+  

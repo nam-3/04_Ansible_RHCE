@@ -1,0 +1,47 @@
+---
+- name: 0) 작업 제어 실습
+  hosts: webservers
+  gather_facts: true
+  vars_files:
+    - vars/vars.yml
+  tasks:
+    ##############################################
+    # 0) 점검 - MEM > 256, 배포판: CentOS
+    # * 방화벽 포트 제거 - http, https
+    # * 서비스 종료 - firewalld, httpd
+    # * 웹 설정 삭제 - /var/www/html/index.html
+    # * 웹 패키지 삭제 - httpd, mod_ssl
+    ##############################################
+    - name: 0) 점검 - MEM > 256, 배포판- CentOS
+      ansible.builtin.fail:
+        msg: "[ FAIL ] 메모리가 256MB 미만이거나, 배포판이 CentOS가 아닙니다."
+      when: >
+        ansible_facts.memtotal_mb < 256 or 
+        ansible_facts.distribution != "CentOS"
+
+    - name: 1) 방화벽 포트 제거 - {{ firewall_rules }}
+      ansible.builtin.firewalld:
+        service: "{{ item }}"
+        state: disabled
+        permanent: false
+        immediate: false
+      loop: "{{ firewall_rules }}"
+
+    - name: 2) 웹서버 설정 삭제 - /var/www/html/index.html
+      ansible.builtin.file:
+        path: '/var/www/html/index.html'
+        state: absent
+
+    - name: 3) 서비스 기동 해제 - httpd
+      ansible.builtin.service: 
+        name: httpd
+        state: stopped
+        enabled: false
+
+    - name: 4) 패키지 삭제 - httpd, mod_ssl
+      ansible.builtin.yum:
+        name: 
+          - httpd
+          - mod_ssl
+        state: absent
+

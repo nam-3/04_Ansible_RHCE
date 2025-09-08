@@ -1,0 +1,64 @@
+---
+- name: 0) 작업 제어 실습
+  hosts: webservers
+  gather_facts: true
+  vars_files:
+    - vars/vars.yml
+  tasks:
+    ##############################################
+    # 0) 점검 - MEM > 256, 배포판: CentOS
+    # 1) 패키지 설치 - httpd, mod_ssl, firewalld
+    # 2) 서비스 기동 - httpd, firewalld
+    # 3) 웹 서버 설정(notify)
+    #   * /etc/pki/tls/certs/localhost.crt
+    #   * /etc/pki/tls/private/localhost.key
+    #   * /var/www/html/index.html
+    # 4) 방화벽 포트 등록 - http, https
+    # 5) handlers 정의
+    ##############################################
+    - name: 0) 점검 - MEM > 256, 배포판- CentOS
+      ansible.builtin.fail:
+        msg: "[ FAIL ] 메모리가 256MB 미만이거나, 배포판이 CentOS가 아닙니다."
+      when: >
+        ansible_facts.memtotal_mb < 256 or 
+        ansible_facts.distribution != "CentOS"
+
+    - name: 1) 패키지 설치 - {{ packages }}
+      ansible.builtin.yum:
+        name: "{{ packages }}"
+        state: present
+
+    - name: 2) 서비스 기동 - {{ services }}
+      ansible.builtin.service: 
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ services }}"
+
+    - name: 3) 웹서버 설정
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: "{{ item.owner }}"
+        group: "{{ item.group }}"
+        mode: "{{ item.mode }}"
+      loop: "{{ web_config_files }}"
+      notify: Restart web service
+
+    - name: 4) 방화벽 포트 등록 - {{ firewall_rules }}
+      ansible.builtin.firewalld:
+        service: "{{ item }}"
+        state: enabled
+        permanent: true
+        immediate: true
+      loop: "{{ firewall_rules }}"
+
+  handlers:
+    - name: Restart web service
+      ansible.builtin.service:
+        name: "{{ web_service }}"
+        state: restarted
+
+    
+        
+        

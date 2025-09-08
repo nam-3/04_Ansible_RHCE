@@ -1,0 +1,35 @@
+---
+- name : 사용자 정의 팩트를 사용한 웹 서버 설정
+  hosts: webserver
+  gather_facts: true
+  tasks:
+  #################################################
+  # 1) 패키지 설치
+  # 2) 서비스 기동
+  # 3) 방화벽 등록
+  #################################################
+
+  - name: 3) 방화벽 삭제 - {{ ansible_local.custom.general.fwsvc }}
+    ansible.posix.firewalld:
+      service: "{{ ansible_local.custom.general.fwsvc }}"
+      permanent: false
+      immediate: false
+      state: disabled
+  
+  - name: 2) 서비스 다운 - {{ ansible_local.custom.general.service }}
+    ansible.builtin.service:
+      name: "{{ ansible_local.custom.general.service }}"
+      state: stopped
+      enabled: false
+    ignore_errors: true
+  
+  - name: 1) 패키지 삭제 - {{ ansible_local.custom.general.package }}
+    ansible.builtin.yum:
+      name: "{{ ansible_local.custom.general.package }}"
+      state: absent
+
+  - name: 4) 팩트 디렉토리 삭제
+    ansible.builtin.file:
+      path: /etc/ansible/facts.d/custom.fact
+      state: absent
+      

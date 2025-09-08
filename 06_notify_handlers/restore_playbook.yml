@@ -1,0 +1,44 @@
+---
+- name: DB 복원
+  hosts: databases
+  remote_user: root
+  # (ansible) ansible 사용자 -- 키배포--> (ansible#) root
+  vars:
+    pkg_db: 
+      - mariadb-server
+      - python3-PyMySQL
+    svc_db: mariadb
+    conf_get_url: 'http://control/my.cnf.standard'
+    conf_mysql: '/etc/my.cnf'
+  tasks:
+  ######################################################################
+  # 1) DB 패키지 설치 - mariadb-server, python3-PyMySQL
+  # 2) DB 서비스 기동 - mariadb
+  #   + DB 암호 설정(root/soldesk1., ALL)
+  # 3) ansible: /var/www/html/my.cnf.standard --get_url --> /root/my.cnf
+  #   + DB 서비스 재기동
+  ######################################################################
+  - name: 설정 파일 삭제 - /etc/my.cnf
+    ansible.builtin.file:
+      path: "{{ conf_mysql }}"
+      state: absent
+      owner: root
+      group: root
+
+  - name: db 데이터 삭제
+    ansible.builtin.file:
+      path: /var/lib/mysql
+      state: absent
+
+  - name: 2) DB 서비스 기동
+    ansible.builtin.service:
+      name: "{{ svc_db }}"
+      state: stopped
+      enabled: false
+
+  - name: 1) DB 패키지 삭제
+    ansible.builtin.dnf:
+      name: "{{ pkg_db }}"
+      state: absent
+
+

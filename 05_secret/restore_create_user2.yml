@@ -1,0 +1,11 @@
+---
+- name: 사용자 추가
+  hosts: all
+  vars_files:
+    - secret2.yml
+  tasks:
+    - name: secret을 사용한 user1 사용자 삭제
+      ansible.builtin.user:
+        name: "{{ username }}"
+        state: absent
+        remove: yes

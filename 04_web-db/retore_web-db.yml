@@ -1,0 +1,50 @@
+---
+- name: 3-Tier Architecture 구현
+  hosts: all
+  tasks:
+  - name: 1) 방화벽 포트 제거 - (firewalld) mysql, http, https
+    ansible.builtin.firewalld:
+      service:  "{{ item }}"
+      permanent: true
+      immediate: true
+      state: disabled
+    loop:
+      - http
+      - https
+      - mysql
+
+  - name: 2) WEB 서비스 종료 - httpd, mariadb
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      state: stopped
+      enabled: false
+    loop:
+      - httpd
+      - mariadb
+
+  - name: 3) 설정 삭제 - (file) /var/www/html/index.php, /var/lib/mysql
+    ansible.builtin.file:
+      path: "{{item}}"
+      state: absent
+    loop:
+      - /var/www/html/index.php
+      - /var/lib/mysql
+      
+  - name: 4) WEB 패키지 삭제 - mariadb, ...
+    ansible.builtin.dnf:
+      name:
+        - httpd
+        - mod_ssl
+        - php
+        - php-mysqlnd
+        - php-pdo
+        - mariadb
+        - mariadb-server
+        - python3-PyMySQL
+      state: absent
+  
+  
+
+  
+
+

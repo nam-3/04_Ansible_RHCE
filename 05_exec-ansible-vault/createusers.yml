@@ -1,0 +1,26 @@
+---
+- name: 사용자 생성
+  hosts: devservers
+  vars_files:
+    - vars/secret.yml
+    # 해당 파일 암호화 되어 있으므로, playbook 실행시 --ask-vault-pass 옵션 필요
+    # 보통은 암호를 파일 안에 넣고 아래처럼 실행함 
+    # echo 'pass' > vault-pass
+    # anp createusers.yml --vault-password-file=vault-pass
+  tasks:
+    - name: Secret을 사용한 사용자 생성
+      ansible.builtin.user:
+        # 아래 방식이 배열 변수를 사용하는 정석
+        name: "{{ item['name'] }}"
+        password: "{{ item.pw | password_hash('sha512') }}"  
+                                # /etc/shadow 밑의 암호화된 패스워드처럼 만들어주는 옵션
+      loop: "{{ newusers }}"
+      #newusers:
+      # - name: demouser1
+      #   pw: soldesk1.
+      # (index1)
+      # - name: demouser2
+      #   pw: soldesk1.
+      # (index2)
+
+    

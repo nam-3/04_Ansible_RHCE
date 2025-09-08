@@ -1,0 +1,15 @@
+---
+- name: NTP 구성 - 시간 동기화
+  hosts: all
+  tasks:
+    - name: 2) 타임존 설정 (asia/seoul)
+      community.general.timezone:
+        name: "{{ host_timezone }}"
+      vars:
+        host_timezone: Asia/Seoul
+
+    - name: 1) NTP 서버에 시간 동기화
+      ansible.builtin.include_role:
+        name: rhel-system-roles.timesync
+        # usr/share/ansible/roles/rhel-ntp.timesync
+

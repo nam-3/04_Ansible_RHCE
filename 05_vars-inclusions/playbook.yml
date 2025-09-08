@@ -1,0 +1,24 @@
+---
+- name: 1. play1 - 파일 서버 패키지 설치
+  hosts: fileservers
+  tasks:
+    - name: 1) 패키지 변수 포함
+      ansible.builtin.include_vars: package.yml
+
+    - name: 2) 패키지 설치 - httpd
+      ansible.builtin.include_tasks: install_package.yml
+
+    - name: 3) 패키지 설치 - epel-release
+      ansible.builtin.include_tasks: install_package.yml
+      vars:
+        package:
+          web_pkg: epel-release
+        # web_pkg: httpd 를 오버라이트함
+        # 지역 블럭이므로 해당 블럭에서만 실행됨
+
+    - name: 4) 패키지 설치 - tomcat
+      ansible.builtin.include_tasks: install_package.yml
+      vars:
+        package:
+          web_pkg: tomcat
+        

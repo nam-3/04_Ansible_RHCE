@@ -1,0 +1,34 @@
+---
+#################################################
+# 가상 호스트 생성
+# >>> roles <<<
+# 1) 패키지 설치 - httpd, mod_ssl
+# 2) 서비스 설정
+# * /etc/httpd/conf.d/vhost.conf
+#   => vhost.conf.j2 -template-> /etc/httpd/conf.d/vhost.conf
+# * /var/www/vhosts/ansible1/index.html
+#   => /var/www/vhosts
+#   => index.html  -copy-> /var/www/vhost/ansible1/index.html
+# 3) 서비스 기동 - httpd
+#################################################
+- name: Restore use-vhost-role.yml
+  hosts: webservers
+  gather_facts: true
+  tasks:
+    - name: 가상 호스트 설정 역할(role)
+      ansible.builtin.include_role:
+        name: rollback-svc
+      vars:
+        fw_svcs: 
+          - http
+          - https
+        svcs:
+          - httpd
+          - firewalld
+        files: 
+          - /var/www/vhosts
+          - /etc/httpd/conf.d/vhost.conf
+        pkgs:
+          - httpd
+          - mod_ssl
+          - firewalld              

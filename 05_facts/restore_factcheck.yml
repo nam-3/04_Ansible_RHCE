@@ -1,0 +1,39 @@
+---
+- name: Install and start Apache HTTPD
+  hosts: all
+  gather_facts: false
+  tasks:
+    ###############################################
+    # >>>> 팩트 변수를 사용하지 않는 플레이북 <<<<
+    ###############################################
+    # => gather_facts: true    [기본값]
+    - name: httpd is downed
+      ansible.builtin.service:
+        name: httpd
+        state: stopped
+        enabled: false
+
+    - name: httpd package is absent
+      ansible.builtin.yum:
+        name: httpd
+        state: absent
+
+    - name: Correct index.html is removed
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent
+    
+    - name: Configuration firewall
+      ansible.posix.firewalld:
+        service: http
+        permanent: false
+        immediate: false
+        state: disabled
+
+    - name: firewalld is stopped
+      ansible.builtin.service:
+        name: firewalld
+        state: stopped
+        enabled: false
+
+

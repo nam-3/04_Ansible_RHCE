@@ -1,0 +1,63 @@
+---
+- name : 웹 서버 설정 및 테스트 (play1)
+  hosts: web1.example.com
+  tasks:
+  ###################################################
+  # 1) 패키지 설치 - httpd, firewalld
+  # 2) 서비스 설정 - /var/www/html/index.html
+  # 3) 서비스 기동 - httpd, firewalld
+  # 4) 방화벽 등록 - http
+  # 5) SELinux(?)
+  ###################################################
+
+  - name: 1) 패키지 설치 - (yum, dnf) httpd, firewalld
+    ansible.builtin.dnf:
+      name:
+        - httpd
+        - firewalld
+      state: present
+  
+  - name: 2) 서비스 설정 - (copy) /var/www/html/index.html
+    ansible.builtin.copy:
+      content: 'Test Web Page - web1.example.com\n'
+      dest: /var/www/html/index.html
+      mode: '0644'
+
+  - name: 3) 서비스 기동 - (service, systemd) httpd, firewalld
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      state: started
+      enabled: true
+    loop:
+      - httpd
+      - firewalld
+
+  - name: 4) 방화벽 등록 - (firewalld) http
+    ansible.posix.firewalld:
+      service: http
+      permanent: true
+      immediate: true
+      state: enabled
+      # 포트를 열면   state: enabled
+      # 포트를 닫으면 state: disabled
+      
+- name: 웹 요청 테스트  (play2)
+  hosts: localhost
+  # 웹 요청은 일반 사용자도 가능하므로,
+  # 권한 상승 요청이 필요없다.
+  become: false
+  tasks:
+    - name: 1) 웹 요청 - (uri) http://web1.example.com
+      ansible.builtin.uri:
+        url: http://web1.example.com
+        status_code: 200 
+        # status_code가 만약 200이라면 성공
+        return_content: true
+      register: output
+      # return_content: true 옵션을 사용하면,
+      # 요청 결과를 output 변수에 저장한다.
+
+    - name: 2) 출력 내용 확인 - (debug) output
+      ansible.builtin.debug:
+        var: output.content
+        # output 변수의 content 항목을 출력

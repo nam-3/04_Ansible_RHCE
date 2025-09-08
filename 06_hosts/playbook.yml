@@ -1,0 +1,14 @@
+---
+- name: 파일 배포
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: /etc/hosts 파일 배포
+      ansible.builtin.copy:
+        src: files/hosts
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: '0644'
+      # 퍼미션 파일이라 똑같이 유지시켜줘야함, ll /etc/hosts로 확인
+

@@ -1,0 +1,38 @@
+---
+# playbook.yml의 정확히 반대 순서로 작성하면 된다.
+- name: Play1 - 웹 서버 설정
+  hosts: webserver
+  vars_files:
+    vars/vars_files.yml
+  tasks:
+    - name: 1) 방화벽 삭제 - {{ fw_80 }}, {{ fw_443 }}
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: disabled
+        immediate: true
+      loop:
+        - "{{ fw_80 }}"
+        - "{{ fw_443 }}"
+
+    - name: 2) 서비스 다운 - {{ svc_web }}
+      ansible.builtin.service:
+        name: "{{ svc_web }}"
+        enabled: false
+        state: stopped
+      ignore_errors: true
+
+    - name: 2) 서비스 삭제 - {{ index }}
+      ansible.builtin.file:
+        path: "{{ index }}"
+        state: absent
+
+    - name: 3) 패키지 삭제 - {{ pkg_http_web }}, {{ pkg_https_web }}, {{ pkg_python }}
+      ansible.builtin.dnf:
+        name: 
+          - "{{ pkg_http_web }}"
+          - "{{ pkg_https_web }}"
+          - "{{ pkg_python }}"
+        state: absent
+      
+    
