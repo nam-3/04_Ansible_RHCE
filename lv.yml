@@ -1,0 +1,59 @@
+---
+- name: LVM Tasks
+  hosts: webservers
+  tasks:
+    - name: check the device - /dev/sdb
+      ansible.builtin.fail:
+        msg: the device does not exist
+      when: ansible_devices.sdb is not defined
+
+    - name: Block ~ Rescue
+      block:
+        - name: Create the partition - /dev/sdb(800 MiB)
+          community.general.parted:
+            device: /dev/sdb
+            number: 1
+            state: present
+            part_start: 1MiB
+            part_end: 100%
+            flags: [lvm]
+      rescue:
+        - name: Print the error message
+          ansible.builtin.debug:
+            msg: Size not Enough
+
+        - name: Create the partiion - /dev/sdb(800MiB)
+          community.general.parted:
+            device: /dev/sdb
+            number: 1
+            state: present
+            part_start: 1MiB
+            part_end: 800MiB
+            flags: [lvm]
+
+    - name: Create the VG
+      ansible.builtin.lvg:
+        vg: research
+        pvs: /dev/sdb1
+
+
+    - name: Create the LV
+      ansible.builtin.lvol:
+        vg: research
+        lv: data
+        size: 500m
+
+    - name: Create th FS
+      community.general.filesystem:
+        dev: /dev/research/data
+        fstype: ext4
+
+    - name: Mount the filesystem with LV
+      ansible.posix.mount:
+        src: /dev/research/data
+        path: /mnt/research
+        fstype: ext4
+        opts: defaults
+        state: mounted
+
+

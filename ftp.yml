@@ -1,0 +1,50 @@
+---
+- name: Configurin FTP Server
+  hosts: test
+  tasks:
+    - name: download pkg - vsftpd, firewalld
+      ansible.builtin.yum:
+        name:
+          - vsftpd
+          - firewalld
+        state: present
+
+    - name: running service
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - vsftpd
+        - firewalld
+
+    - name: Open port vsftpd
+      ansible.posix.firewalld:
+        service: ftp
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: uncheck anonimouse FTP service
+      ansible.builtin.lineinfile:
+        path: /etc/vsftpd/vsftpd.conf
+        regexp: '^anonymous_enable='
+        line: anonymous_enable=NO
+      notify:
+        restart vsftpd
+
+    - name: root authorized ftp
+      ansible.builtin.lineinfile:
+        path: /etc/vsftpd/ftpusers
+        regexp: '^root'
+        state: present
+        line: '#root'
+      notify:
+        restart vsftpd
+
+  handlers:
+    - name: restart vsftpd
+      ansible.builtin.service:
+        name: vsftpd
+        state: restarted
+
