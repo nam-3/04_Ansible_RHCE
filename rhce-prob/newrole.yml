@@ -1,0 +1,7 @@
+---
+- name: Make a role
+  hosts: webservers
+  tasks:
+    - name: Make a role - apache
+      ansible.builtin.include_role:
+        name: apache

@@ -1,0 +1,14 @@
+---
+- name: Change the Default Target
+  hosts: all
+  tasks:
+    - name: Change the default target at boot time, TUI
+      ansible.builtin.file: 
+        src: /usr/lib/systemd/system/multi-user.target
+        dest: /etc/systemd/system/default.target
+        state: link
+
+    - name: Change the default target at current
+      ansible.builtin.command:
+        cmd: systemctl isolate multi-user.target
+        

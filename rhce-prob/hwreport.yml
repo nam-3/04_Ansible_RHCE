@@ -1,0 +1,76 @@
+- name: Hardware Report
+  hosts: all
+  tasks:
+  ###########################################################
+  # 1) URL/hwreport.empty --> /root/hwreport.txt
+  # 2) Edit a file - /root/hwreport.txt
+  # 3) Fetch the files - ~/project/result/*
+  ##########################################################
+  - name: 1) URL/hwreport.empty --> /root/hwreport.txt
+    ansible.builtin.get_url:
+      url: http://192.168.10.10/hwreport.empty
+      dest: /root/hwreport.txt
+
+  - name: 2) Edit a file - /root/hwreport.txt , HOST
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: '^HOST'
+      line: HOST={{ inventory_hostname }}
+
+  - name: 2-1) BIOS - version
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: '^BIOS'
+      line: BIOS={{ ansible_bios_version }}
+
+  - name: 2-2) MEMORY
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: '^MEM'
+      line: MEMORY={{ ansible_memory_mb.real.total }}
+
+
+
+  - name: 2-3) SDA_
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: '^SDA_'
+      line: |
+       {% if ansible_devices.sda.size is defined %}
+       SDA_DISK_SIZE={{ ansible_devices.sda.size }}
+       {% else %}
+       SDA_DISK_SIZE=NONE
+       {% endif %}
+      state: present
+
+  - name: 2-4) SDB__
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: '^SDB_'
+      line: |
+       {% if ansible_devices.sdb.size is defined %}
+       SDA_DISK_SIZE={{ ansible_devices.sdb.size }}
+       {% else %}
+       SDB_DISK_SIZE=NONE
+       {% endif %}
+      state: present
+
+
+  - name: 2-5) SDC_
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: '^SDC_'
+      line: |
+       {% if ansible_devices.sdc.size is defined %}
+       SDA_DISK_SIZE={{ ansible_devices.sdc.size }}
+       {% else %}
+       SDC_DISK_SIZE=NONE
+       {% endif %}
+      state: present
+
+  - name: 3) Fetch file
+    ansible.builtin.fetch:
+      src: /root/hwreport.txt
+      dest: /home/ansible/project/results/hwreport-{{ ansible_hostname }}.txt
+      flat: yes
+
