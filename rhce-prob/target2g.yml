@@ -1,0 +1,11 @@
+---
+- name: Change the default target
+  hosts: all
+  tasks:
+    - name: Change the default systemd target at boot time, GUI
+      ansible.builtin.command:
+       cmd: systemctl set-default graphical.target
+
+    - name: Change the default systemd target at current
+      ansible.builtin.command:
+        cmd: systemctl isolate graphical.target
